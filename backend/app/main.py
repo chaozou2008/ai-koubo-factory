@@ -15,7 +15,9 @@ app.add_middleware(
 )
 
 from app.api.auth import router as auth_router
+from app.api.avatars import router as avatars_router
 app.include_router(auth_router)
+app.include_router(avatars_router)
 
 
 @app.get("/api/health")
