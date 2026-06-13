@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from passlib.context import CryptContext
+import bcrypt
 from jose import jwt
 from datetime import datetime, timedelta
 from uuid import UUID
@@ -15,7 +15,13 @@ from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 
 def create_access_token(user_id: UUID) -> str:
@@ -36,7 +42,7 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
     user = User(
         phone=req.phone,
-        password_hash=pwd_context.hash(req.password),
+        password_hash=hash_password(req.password),
         company_name=req.company_name,
     )
     db.add(user)
@@ -56,7 +62,7 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
 async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.phone == req.phone))
     user = result.scalar_one_or_none()
-    if not user or not pwd_context.verify(req.password, user.password_hash):
+    if not user or not verify_password(req.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="手机号或密码错误")
 
     token = create_access_token(user.id)
