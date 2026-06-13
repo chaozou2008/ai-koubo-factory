@@ -18,10 +18,14 @@ from app.api.auth import router as auth_router
 from app.api.avatars import router as avatars_router
 from app.api.templates import router as templates_router
 from app.api.videos import router as videos_router
+from app.api.plans import router as plans_router
+from app.api.credits import router as credits_router
 app.include_router(auth_router)
 app.include_router(avatars_router)
 app.include_router(templates_router)
 app.include_router(videos_router)
+app.include_router(plans_router)
+app.include_router(credits_router)
 
 
 @app.get("/api/health")
