@@ -7,7 +7,7 @@
       <div class="header-right">
         <CreditBadge />
         <el-dropdown trigger="click">
-          <el-button type="text" style="color: #333">
+          <el-button link style="color: #333">
             {{ userStore.user?.phone }} <el-icon><ArrowDown /></el-icon>
           </el-button>
           <template #dropdown>
