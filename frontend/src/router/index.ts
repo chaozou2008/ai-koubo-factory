@@ -17,9 +17,7 @@ const router = createRouter({
     },
     {
       path: "/",
-      name: "Dashboard",
-      component: () => import("../views/Dashboard.vue"),
-      meta: { requiresAuth: true },
+      redirect: "/videos/create",
     },
     {
       path: "/avatars",

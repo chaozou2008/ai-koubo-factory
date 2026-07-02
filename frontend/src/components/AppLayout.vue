@@ -23,16 +23,16 @@
     <el-container>
       <el-aside width="200px" class="app-aside">
         <el-menu router :default-active="$route.path" background-color="#fafafa">
-          <el-menu-item index="/">
-            <el-icon><HomeFilled /></el-icon>
-            <span>工作台</span>
+          <el-menu-item index="/videos/create">
+            <el-icon><VideoCamera /></el-icon>
+            <span>生成视频</span>
           </el-menu-item>
           <el-menu-item index="/avatars">
             <el-icon><UserFilled /></el-icon>
             <span>我的形象</span>
           </el-menu-item>
           <el-menu-item index="/videos">
-            <el-icon><VideoCamera /></el-icon>
+            <el-icon><Goods /></el-icon>
             <span>视频管理</span>
           </el-menu-item>
           <el-menu-item index="/plans">

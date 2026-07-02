@@ -7,8 +7,12 @@
       </el-button>
     </div>
     <el-table :data="videos" v-loading="loading" empty-text="还没有生成视频">
-      <el-table-column prop="script_text" label="文案" :show-overflow-tooltip="true">
-        <template #default="{ row }">{{ row.script_text.slice(0, 50) }}{{ row.script_text.length > 50 ? '...' : '' }}</template>
+      <el-table-column label="内容" :show-overflow-tooltip="true" width="300">
+        <template #default="{ row }">
+          <span v-if="row.script_text">{{ row.script_text.slice(0, 40) }}{{ row.script_text.length > 40 ? '...' : '' }}</span>
+          <span v-else-if="row.prompt" style="color:#999">{{ row.prompt.slice(0, 40) }}{{ row.prompt.length > 40 ? '...' : '' }}</span>
+          <span v-else style="color:#ccc">-</span>
+        </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="120">
         <template #default="{ row }">
@@ -22,7 +26,7 @@
       <el-table-column label="操作" width="200">
         <template #default="{ row }">
           <el-button size="small" text type="primary" @click="$router.push(`/videos/${row.id}`)">详情</el-button>
-          <el-button v-if="row.status === 'done'" size="small" text type="success" @click="download(row)">下载</el-button>
+          <el-button v-if="row.status === 'done'" size="small" text type="success" @click="$router.push(`/videos/${row.id}`)">播放</el-button>
           <el-button size="small" text type="danger" @click="handleDelete(row.id)">删除</el-button>
         </template>
       </el-table-column>
@@ -47,10 +51,6 @@ function statusText(status: string) {
   const map: Record<string, string> = { done: "已完成", failed: "失败", processing: "生成中", queued: "排队中", tts_done: "语音完成" };
   return map[status] || status;
 }
-function download(row: any) {
-  if (row.video_url) window.open(row.video_url);
-}
-
 async function fetchVideos() {
   loading.value = true;
   try { const resp = await getVideos(); videos.value = resp.data.items; }
