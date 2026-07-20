@@ -18,6 +18,22 @@
           <el-text type="danger">{{ video.error_message }}</el-text>
         </el-descriptions-item>
       </el-descriptions>
+
+      <!-- 分镜进度（长视频） -->
+      <div v-if="video?.long_video && segmentProgress" style="margin-top: 20px">
+        <h4>📋 分镜生成进度</h4>
+        <div v-for="seg in segmentProgress.segments" :key="seg.index"
+             style="display:flex; align-items:center; gap:12px; padding: 10px 0; border-bottom: 1px solid #eee;">
+          <span style="font-weight: bold; min-width: 64px;">分镜 {{ seg.index + 1 }}</span>
+          <el-tag :type="seg.status === 'done' ? 'success' : seg.status === 'generating' ? 'warning' : seg.status === 'failed' ? 'danger' : 'info'" size="small">
+            {{ seg.status === 'done' ? '已完成' : seg.status === 'generating' ? '生成中...' : seg.status === 'failed' ? '失败' : '排队中' }}
+          </el-tag>
+          <span v-if="seg.prompt" style="color: #999; font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            {{ seg.prompt }}
+          </span>
+        </div>
+      </div>
+
       <div v-if="video?.status === 'done' && video?.video_url" style="margin-top: 24px">
         <video :src="video.video_url" controls style="width:100%;max-width:360px;border-radius:8px;background:#000">
           您的浏览器不支持视频播放
@@ -50,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getVideo } from "../api/videos";
@@ -98,13 +114,20 @@ const platforms = ref([
 ]);
 
 function statusType(s: string) {
-  const map: Record<string, string> = { done: "success", failed: "danger", processing: "warning", queued: "info" };
+  const map: Record<string, string> = { done: "success", failed: "danger", processing: "warning", video_generating: "warning", queued: "info" };
   return map[s] || "info";
 }
 function statusText(s: string) {
-  const map: Record<string, string> = { done: "已完成", failed: "失败", processing: "生成中", queued: "排队中" };
+  const map: Record<string, string> = { done: "已完成", failed: "失败", processing: "生成中", video_generating: "生成中", queued: "排队中" };
   return map[s] || s;
 }
+
+// 分镜进度
+const segmentProgress = computed(() => {
+  if (!video.value?.segment_status) return null;
+  try { return JSON.parse(video.value.segment_status); }
+  catch { return null; }
+});
 
 async function refresh() {
   loading.value = true;
@@ -112,7 +135,23 @@ async function refresh() {
   finally { loading.value = false; }
 }
 
-onMounted(refresh);
+// 自动轮询：进行中每5秒刷新
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+onMounted(() => {
+  refresh();
+  pollTimer = setInterval(() => {
+    const s = video.value?.status;
+    if (s === 'processing' || s === 'video_generating' || s === 'queued') {
+      refresh();
+    } else if (s === 'done' || s === 'failed') {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+});
 </script>
 
 <style scoped>

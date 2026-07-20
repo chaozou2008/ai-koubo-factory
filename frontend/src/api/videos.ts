@@ -1,6 +1,6 @@
 import client from "./client";
 
-export function createVideo(avatarId: string, templateId: string, scriptText: string, prompt?: string, refVideoUrl?: string, duration?: number, sceneImageUrl?: string) {
+export function createVideo(avatarId: string, templateId: string, scriptText: string, prompt?: string, refVideoUrl?: string, duration?: number, sceneImageUrl?: string, provider?: string, longVideo?: boolean) {
   return client.post("/api/videos", {
     avatar_id: avatarId || null,
     template_id: templateId,
@@ -9,6 +9,8 @@ export function createVideo(avatarId: string, templateId: string, scriptText: st
     reference_video_url: refVideoUrl || null,
     duration: duration || 5,
     scene_image_url: sceneImageUrl || null,
+    provider: provider || "seedance",
+    long_video: longVideo || false,
   });
 }
 

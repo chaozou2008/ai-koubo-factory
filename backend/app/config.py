@@ -1,3 +1,9 @@
+import os
+
+# 清除可能指向已关闭代理的环境变量，避免所有 HTTP 请求失败
+for _key in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY", "NO_PROXY"):
+    os.environ.pop(_key, None)
+
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -25,6 +31,10 @@ class Settings(BaseSettings):
     # Volcengine Seedance
     VOLCENGINE_ACCESS_KEY: str = ""
     VOLCENGINE_SECRET_KEY: str = ""
+    VOLCENGINE_ARK_API_KEY: str = ""
+
+    # MiniMax 海螺AI (Hailuo) — T2V / I2V video generation
+    MINIMAX_API_KEY: str = ""
 
     # OSS/COS
     OSS_ENDPOINT: str = ""

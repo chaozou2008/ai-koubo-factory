@@ -23,3 +23,20 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
+
+*.log
+
+# Claude
+.claude/
+
+# Secret keys
+docs/*SecretKey*
+docs/*AccessKey*
+
+# Temp
+backend/tmp/
+backend/*.wav
+backend/templates.json
+
+# Pytest
+backend/.pytest_cache/

@@ -7,6 +7,7 @@ celery_app = Celery(
     "koubo_factory",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
+    include=["app.tasks.video_tasks"],
 )
 
 celery_app.conf.update(

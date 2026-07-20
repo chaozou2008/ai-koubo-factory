@@ -73,12 +73,29 @@
                 :placeholder="selectedTemplate?.config?.seedance_prompt || '描述视频场景...'" />
             </el-form-item>
 
-            <!-- 时长 -->
-            <el-form-item label="视频时长">
+            <!-- 时长（长视频模式下隐藏，自动用10s/段） -->
+            <el-form-item v-if="!form.longVideo" label="视频时长">
               <el-slider v-model="form.duration" :min="4" :max="15" :step="1" show-input style="max-width:300px" />
             </el-form-item>
 
-            <el-alert title="每条视频消耗 10 算粒" type="warning" :closable="false" style="margin-bottom:16px" />
+            <!-- AI 引擎选择 -->
+            <el-form-item label="AI 引擎">
+              <el-radio-group v-model="form.provider">
+                <el-radio value="hailuo">海螺AI（MiniMax · 便宜）</el-radio>
+                <el-radio value="seedance-mini">Seedance 2.0 Mini（火山引擎 · 高性价比）</el-radio>
+                <el-radio value="seedance">Seedance 2.0（火山引擎 · 高质量）</el-radio>
+              </el-radio-group>
+            </el-form-item>
+
+            <!-- 长视频模式（仅海螺） -->
+            <el-form-item v-if="form.provider === 'hailuo'" label="视频模式">
+              <el-radio-group v-model="form.longVideo">
+                <el-radio :value="false">普通模式（6-10秒 · 10算粒）</el-radio>
+                <el-radio :value="true">长视频模式（~30秒 · 3段拼接 · 30算粒）</el-radio>
+              </el-radio-group>
+            </el-form-item>
+
+            <el-alert :title="form.longVideo ? '长视频消耗 30 算粒（3段 × 10）' : '每条视频消耗 10 算粒'" type="warning" :closable="false" style="margin-bottom:16px" />
             <el-button type="primary" :loading="loading" size="large" @click="handleCreate">生成视频</el-button>
           </el-form>
         </el-card>
@@ -88,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getAvatars, uploadPhoto } from "../api/avatars";
@@ -102,7 +119,7 @@ const userStore = useUserStore();
 const loading = ref(false);
 const avatars = ref<any[]>([]);
 const templates = ref<any[]>([]);
-const form = ref({ avatar_id:"", template_id:"", script_text:"", prompt:"", scene_image_url:"", reference_video_url:"", duration:5, category:"" });
+const form = ref({ avatar_id:"", template_id:"", script_text:"", prompt:"", scene_image_url:"", reference_video_url:"", duration:5, category:"", provider:"hailuo", longVideo:false });
 const selectedTemplate = ref<any>(null);
 const scenePhotoFiles = ref<any[]>([]);
 const sceneVideoFiles = ref<any[]>([]);
@@ -142,12 +159,17 @@ async function handleCreate() {
   loading.value = true;
   try {
     const r = await createVideo(form.value.avatar_id, form.value.template_id, form.value.script_text,
-      form.value.prompt, form.value.reference_video_url, form.value.duration, form.value.scene_image_url);
+      form.value.prompt, form.value.reference_video_url, form.value.duration, form.value.scene_image_url, form.value.provider, form.value.longVideo);
     await userStore.fetchBalance();
     ElMessage.success("已提交！");
     router.push(`/videos/${r.data.id}`);
   } catch {} finally { loading.value = false; }
 }
+
+// 切换到非海螺引擎时关闭长视频模式
+watch(() => form.value.provider, (v) => {
+  if (v !== 'hailuo') form.value.longVideo = false;
+});
 </script>
 
 <style scoped>

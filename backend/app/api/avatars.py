@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
@@ -11,6 +11,19 @@ from app.api.deps import get_current_user
 from app.services.seedance_service import get_seedance_service
 
 router = APIRouter(prefix="/api/avatars", tags=["avatars"])
+
+
+@router.post("/upload")
+async def upload_photo(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """上传本地照片到OSS，返回URL"""
+    from app.services.storage_service import get_storage_service
+    storage = get_storage_service()
+    content = await file.read()
+    url = await storage.upload_image(file.filename or "photo.jpg", content)
+    return {"url": url}
 
 
 @router.post("", response_model=AvatarResponse, status_code=status.HTTP_201_CREATED)
